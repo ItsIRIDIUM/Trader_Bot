@@ -74,18 +74,15 @@ def open_position(pair, order_type, size, tp_distance=None, stop_distance=None):
 
 
 # get orders
-def positions_get(symbol=None):
-    if symbol is None:
-        res = mt.positions_get()
-    else:
-        res = mt.positions_get(symbol=symbol)
+def positions_get(symbol):
+    res = mt.positions_get(symbol=symbol)
 
     return res
 
 
 # close order
 def close_position(deal_id):
-    open_positions = positions_get()
+    open_positions = positions_get('EURUSD')
     order_type = open_positions[0][5]
     symbol = open_positions[0][16]
     volume = open_positions[0][9]
@@ -119,58 +116,49 @@ def close_position(deal_id):
 
 
 def close_pos_by_symbol(symbol):
-    close_position(int(positions_get()[0][0]))
+    for i in range(len(positions_get(symbol))):
+        close_position(int(positions_get(symbol)[i][0]))
 
 
 def trading(account, password, server):
     mt.initialize()
     num = 2
     pos = positions_get('EURUSD')
-    if not len(pos):
-        num = 2
-    elif len(pos):
+    if len(pos):
         if pos[0][5]:
             num = 0
         else:
             num = 1
 
-    if not len(pos):
-        if g.datetime.today().weekday() != 5 and g.datetime.today().weekday() != 6:
-            connect(account, password, server)
-            account_info = mt.account_info()
-            balance = account_info[10]
-            vol = balance / 16 / 100
-            if num == 2:
-                m = start()
-                if vertex[-2] <= -10:
-                    print('B', vertex[-1], vertex[-2], datetime.datetime.now().time(), m)
-                    open_position(symbol, 'BUY', vol, 5000, 5000)
-                elif vertex[-2] >= 10:
-                    print('S', vertex[-1], vertex[-2], datetime.datetime.now().time(), m)
-                    open_position(symbol, 'SELL', vol, 5000, 5000)
-                else:
-                    print('#', vertex[-1], vertex[-2], datetime.datetime.now().time(), m)
+    if g.datetime.today().weekday() != 5 and g.datetime.today().weekday() != 6:
+        connect(account, password, server)
+        account_info = mt.account_info()
+        balance = account_info[10]
+        vol = balance / 16 / 100
+        vol = round(vol, 2)
+        m = start()
+        if vertex[-2] <= -10:
+            print('B', vertex[-1], vertex[-2], datetime.datetime.now().time(), m)
+            open_position(symbol, 'BUY', vol, 5000, 5000)
+        elif vertex[-2] >= 10:
+            print('S', vertex[-1], vertex[-2], datetime.datetime.now().time(), m)
+            open_position(symbol, 'SELL', vol, 5000, 5000)
         else:
-            print('It is weekend')
-    else:
-        if g.datetime.today().weekday() != 5 and g.datetime.today().weekday() != 6:
             if num == 1:
-                m = start()
                 if vertex[-1] >= 0 or vertex[-2] >= 0:
-                    print('-', vertex[-1], vertex[-2], datetime.datetime.now().time(), m)
+                    print('=', vertex[-1], vertex[-2], datetime.datetime.now().time(), m)
                     close_pos_by_symbol(symbol)
                     num = 2
                 else:
                     print('#', vertex[-1], vertex[-2], datetime.datetime.now().time(), m)
             elif num == 0:
-                m = start()
                 if vertex[-1] <= 0 or vertex[-2] <= 0:
                     print('=', vertex[-1], vertex[-2], datetime.datetime.now().time(), m)
                     close_pos_by_symbol(symbol)
                     num = 2
                 else:
                     print('#', vertex[-1], vertex[-2], datetime.datetime.now().time(), m)
-        else:
-            print('It is weekend')
-
-        return num
+            else:
+                print('#', vertex[-1], vertex[-2], datetime.datetime.now().time(), m)
+    else:
+        print('It is weekend')
