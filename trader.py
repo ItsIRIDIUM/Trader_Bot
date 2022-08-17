@@ -41,7 +41,6 @@ def open_position(pair, order_type, size, tp_distance=None, stop_distance=None):
             sl = price - (stop_distance * point)
         if tp_distance:
             tp = price + (tp_distance * point)
-
     elif order_type == "SELL":
         order = mt.ORDER_TYPE_SELL
         price = mt.symbol_info_tick(pair).bid
@@ -81,8 +80,8 @@ def positions_get(symbol):
 
 
 # close order
-def close_position(deal_id):
-    open_positions = positions_get('EURUSD')
+def close_position(deal_id, symbol):
+    open_positions = positions_get(symbol)
     order_type = open_positions[0][5]
     symbol = open_positions[0][16]
     volume = open_positions[0][9]
@@ -116,49 +115,57 @@ def close_position(deal_id):
 
 
 def close_pos_by_symbol(symbol):
-    for i in range(len(positions_get(symbol))):
-        close_position(int(positions_get(symbol)[i][0]))
+    try:
+        for i in range(len(positions_get(symbol))):
+            close_position(int(positions_get(symbol)[i][0]), symbol)
+    except:
+        print(symbol + ' out of range')
 
 
-def trading(account, password, server):
-    mt.initialize()
-    num = 2
-    pos = positions_get('EURUSD')
-    if len(pos):
-        if pos[0][5]:
-            num = 0
-        else:
-            num = 1
-
-    if g.datetime.today().weekday() != 5 and g.datetime.today().weekday() != 6:
-        connect(account, password, server)
-        account_info = mt.account_info()
-        balance = account_info[10]
-        vol = balance / 16 / 100
-        vol = round(vol, 2)
-        m = start()
-        if vertex[-2] <= -10:
-            print('B', vertex[-1], vertex[-2], datetime.datetime.now().time(), m)
-            open_position(symbol, 'BUY', vol, 5000, 5000)
-        elif vertex[-2] >= 10:
-            print('S', vertex[-1], vertex[-2], datetime.datetime.now().time(), m)
-            open_position(symbol, 'SELL', vol, 5000, 5000)
-        else:
-            if num == 1:
-                if vertex[-1] >= 0 or vertex[-2] >= 0:
-                    print('=', vertex[-1], vertex[-2], datetime.datetime.now().time(), m)
-                    close_pos_by_symbol(symbol)
-                    num = 2
+def trading(account, password, server, symbols):
+    for symbol in symbols:
+        mt.initialize()
+        num = 2
+        pos = positions_get(symbol)
+        try:
+            if len(pos):
+                if pos[0][5]:
+                    num = 0
                 else:
-                    print('#', vertex[-1], vertex[-2], datetime.datetime.now().time(), m)
-            elif num == 0:
-                if vertex[-1] <= 0 or vertex[-2] <= 0:
-                    print('=', vertex[-1], vertex[-2], datetime.datetime.now().time(), m)
-                    close_pos_by_symbol(symbol)
-                    num = 2
-                else:
-                    print('#', vertex[-1], vertex[-2], datetime.datetime.now().time(), m)
+                    num = 1
+        except:
+            pass
+
+        if g.datetime.today().weekday() != 5 and g.datetime.today().weekday() != 6:
+            connect(account, password, server)
+            account_info = mt.account_info()
+            balance = account_info[10]
+            vol = balance / 64 / 100
+            vol = round(vol, 2)
+            m = start(symbol)
+            if vertex[-2] <= -10:
+                print('B', vertex[-1], vertex[-2], datetime.datetime.now().time(), m, symbol)
+                open_position(symbol, 'BUY', vol, 5000, 5000)
+            elif vertex[-2] >= 10:
+                print('S', vertex[-1], vertex[-2], datetime.datetime.now().time(), m, symbol)
+                open_position(symbol, 'SELL', vol, 5000, 5000)
             else:
-                print('#', vertex[-1], vertex[-2], datetime.datetime.now().time(), m)
-    else:
-        print('It is weekend')
+                if num == 1:
+                    if vertex[-1] >= 0 or vertex[-2] >= 0:
+                        print('=', vertex[-1], vertex[-2], datetime.datetime.now().time(), m, symbol)
+                        close_pos_by_symbol(symbol)
+                        num = 2
+                    else:
+                        print('#', vertex[-1], vertex[-2], datetime.datetime.now().time(), m, symbol)
+                elif num == 0:
+                    if vertex[-1] <= 0 or vertex[-2] <= 0:
+                        print('=', vertex[-1], vertex[-2], datetime.datetime.now().time(), m, symbol)
+                        close_pos_by_symbol(symbol)
+                        num = 2
+                    else:
+                        print('#', vertex[-1], vertex[-2], datetime.datetime.now().time(), m, symbol)
+                else:
+                    print('#', vertex[-1], vertex[-2], datetime.datetime.now().time(), m, symbol)
+        else:
+            print('It is weekend')
+    print("|--------------------------------|")
