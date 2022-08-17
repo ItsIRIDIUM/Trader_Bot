@@ -7,7 +7,7 @@ import datetime
 
 # H1 = 300 H4 = 200
 
-symbol = 'EURUSD'
+
 timeframe = mt.TIMEFRAME_M5
 rates_total = 50
 period = 5  # 4 hours in minutes
@@ -22,7 +22,7 @@ level_s = -10
 vertex = []
 
 
-def start():
+def start(symbol):
     mt.initialize()
     rates = mt.copy_rates_from_pos(symbol, timeframe, 0, rates_total)
 
@@ -69,4 +69,3 @@ def start():
             v = complex_dn / complex_up - complex_up / complex_dn
             vertex.append(v)
     return opn[-1], opn[-2]
-
