@@ -108,9 +108,9 @@ def close_position(deal_id, symbol):
     result = mt.order_send(close_request)
 
     if result.retcode != mt.TRADE_RETCODE_DONE:
-        print("Failed to close order :(", result.retcode)
+        print("Failed to close order :(")
     if result.retcode == mt.TRADE_RETCODE_REQUOTE:
-        close_position(deal_id, symbol)
+        close_pos_by_symbol(symbol)
     else:
         print("Order successfully closed!")
 
