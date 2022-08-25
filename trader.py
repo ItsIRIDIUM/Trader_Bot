@@ -1,5 +1,4 @@
 import MetaTrader5 as mt
-import pandas as pd
 from calc import *
 import math
 import datetime as g
@@ -67,7 +66,7 @@ def open_position(pair, order_type, size, tp_distance=None, stop_distance=None):
     print('result retcode: ', result.retcode)
 
     if result.retcode != mt.TRADE_RETCODE_DONE:
-        print("Failed to send order :(")
+        print("Failed to send order :(", mt.last_error())
     else:
         print("Order successfully placed!")
 
@@ -109,22 +108,24 @@ def close_position(deal_id, symbol):
     result = mt.order_send(close_request)
 
     if result.retcode != mt.TRADE_RETCODE_DONE:
-        print("Failed to close order :(")
+        print("Failed to close order :(", result.retcode)
+    if result.retcode == mt.TRADE_RETCODE_REQUOTE:
+        close_position(deal_id, symbol)
     else:
         print("Order successfully closed!")
 
 
 def close_pos_by_symbol(symbol):
-    try:
-        for i in range(len(positions_get(symbol))):
-            close_position(int(positions_get(symbol)[i][0]), symbol)
-    except:
-        print(symbol + ' out of range')
+    for _ in range(len(positions_get(symbol))):
+        close_position(int(positions_get(symbol)[0][0]), symbol)
+
+
+def msg(t, m, symbol):
+    print(t, vertex[-1], vertex[-2], datetime.datetime.now().time(), m, symbol)
 
 
 def trading(account, password, server, symbols):
     for symbol in symbols:
-        mt.initialize()
         num = 2
         pos = positions_get(symbol)
         try:
@@ -140,32 +141,29 @@ def trading(account, password, server, symbols):
             connect(account, password, server)
             account_info = mt.account_info()
             balance = account_info[10]
-            vol = balance / 64 / 100
+            vol = balance / 16 / 100
             vol = round(vol, 2)
             m = start(symbol)
             if vertex[-2] <= -10:
-                print('B', vertex[-1], vertex[-2], datetime.datetime.now().time(), m, symbol)
+                msg('B', m, symbol)
                 open_position(symbol, 'BUY', vol, 5000, 5000)
             elif vertex[-2] >= 10:
-                print('S', vertex[-1], vertex[-2], datetime.datetime.now().time(), m, symbol)
+                msg('S', m, symbol)
                 open_position(symbol, 'SELL', vol, 5000, 5000)
             else:
                 if num == 1:
                     if vertex[-1] >= 0 or vertex[-2] >= 0:
-                        print('=', vertex[-1], vertex[-2], datetime.datetime.now().time(), m, symbol)
+                        msg('=', m, symbol)
                         close_pos_by_symbol(symbol)
-                        num = 2
                     else:
-                        print('#', vertex[-1], vertex[-2], datetime.datetime.now().time(), m, symbol)
+                        msg('-', m, symbol)
                 elif num == 0:
                     if vertex[-1] <= 0 or vertex[-2] <= 0:
-                        print('=', vertex[-1], vertex[-2], datetime.datetime.now().time(), m, symbol)
+                        msg('=', m, symbol)
                         close_pos_by_symbol(symbol)
-                        num = 2
                     else:
-                        print('#', vertex[-1], vertex[-2], datetime.datetime.now().time(), m, symbol)
+                        msg('-', m, symbol)
                 else:
-                    print('#', vertex[-1], vertex[-2], datetime.datetime.now().time(), m, symbol)
+                    msg('#', m, symbol)
         else:
             print('It is weekend')
-    print("|--------------------------------|")
