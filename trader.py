@@ -1,10 +1,12 @@
 import MetaTrader5 as mt
 from calc import *
-import math
-import datetime as g
+from catch import catch_exceptions
+import datetime
+import datetime
 
 
 # connecting to MetaTrader 5
+@catch_exceptions()
 def connect(account, password, server):
     account = int(account)
     mt.initialize()
@@ -19,6 +21,7 @@ def connect(account, password, server):
 
 
 # open order
+@catch_exceptions()
 def open_position(pair, order_type, size, tp_distance=None, stop_distance=None):
     symbol_info = mt.symbol_info(pair)
     if symbol_info is None:
@@ -67,11 +70,13 @@ def open_position(pair, order_type, size, tp_distance=None, stop_distance=None):
 
     if result.retcode != mt.TRADE_RETCODE_DONE:
         print("Failed to send order :(", mt.last_error())
+        open_position(pair, order_type, size)
     else:
         print("Order successfully placed!")
 
 
 # get orders
+@catch_exceptions()
 def positions_get(symbol):
     res = mt.positions_get(symbol=symbol)
 
@@ -79,6 +84,7 @@ def positions_get(symbol):
 
 
 # close order
+@catch_exceptions()
 def close_position(deal_id, symbol):
     open_positions = positions_get(symbol)
     order_type = open_positions[0][5]
@@ -115,15 +121,19 @@ def close_position(deal_id, symbol):
         print("Order successfully closed!")
 
 
+@catch_exceptions()
 def close_pos_by_symbol(symbol):
+    print('try ot close')
     for _ in range(len(positions_get(symbol))):
         close_position(int(positions_get(symbol)[0][0]), symbol)
 
 
+@catch_exceptions()
 def msg(t, m, symbol):
     print(t, vertex[-1], vertex[-2], datetime.datetime.now().time(), m, symbol)
 
 
+@catch_exceptions()
 def trading(account, password, server, symbols):
     for symbol in symbols:
         num = 2
@@ -137,7 +147,7 @@ def trading(account, password, server, symbols):
         except:
             pass
 
-        if g.datetime.today().weekday() != 5 and g.datetime.today().weekday() != 6:
+        if datetime.datetime.today().weekday() != 5 and datetime.datetime.today().weekday() != 6:
             connect(account, password, server)
             account_info = mt.account_info()
             balance = account_info[10]

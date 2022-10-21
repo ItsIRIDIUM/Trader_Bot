@@ -1,11 +1,6 @@
 import MetaTrader5 as mt
 import numpy as np
-# from rich.console import Console
-# from rich.table import Table
-# import matplotlib.pyplot as plt
-import datetime
-
-# H1 = 300 H4 = 200
+from catch import catch_exceptions
 
 
 timeframe = mt.TIMEFRAME_M5
@@ -22,6 +17,7 @@ level_s = -10
 vertex = []
 
 
+@catch_exceptions()
 def start(symbol):
     try:
         mt.initialize()
